@@ -14,9 +14,9 @@ class item:
 # Given the list with A items, create another list to flag if they're put into the bag or not
 
 # Start with the simplest situation (k = 1, with only weight limit)
-# Loop until restriction is reached
+	# Heuristic function: h(x) = totalWeight / totalValue
 
-def localBeamSearch(flagForItemsPut, itemList):
+def localBeamSearch(flagForItemsPut, itemList, weightLimit):
 	# Initialize some variables
 	kBest = 1
 	totalWeight = 0
@@ -27,6 +27,7 @@ def localBeamSearch(flagForItemsPut, itemList):
 	flagForItemsPut[randomItem] = 1
 	totalWeight += itemList[randomItem].weight
 	totalValue += itemList[randomItem].value
+	print(randomItem)
 
 	# Next, find all of its successor (means try to combine with every other items)
 	while 1:
@@ -38,23 +39,26 @@ def localBeamSearch(flagForItemsPut, itemList):
 		for x in range(len(itemList)):
 			# If item is not listed, check
 			if flagForItemsPut[x] == 0:
-				# Else, start adding it up
 				tempTotalWeight = totalWeight + itemList[x].weight
 				tempTotalValue = totalValue + itemList[x].value
+				tempHeuristic = tempTotalWeight / tempTotalValue
+
+				# Check if weight exceeded the weightLimit
+				if tempTotalWeight > weightLimit:
+					continue
 
 				# Then we compare with the best heuristic values
 				# Check if tempHeuristic is used
 				if bestHeuristic == -1:
-					bestHeuristic = tempTotalWeight / tempTotalValue
+					bestHeuristic = tempHeuristic
 					bestTotalWeight = tempTotalWeight
 					bestTotalValue = tempTotalValue
 					pickedItem = x
 				else:
-					currentItemHeuristic = tempTotalWeight / tempTotalValue
-					if currentItemHeuristic < bestHeuristic:
+					if tempHeuristic < bestHeuristic:
 						bestTotalWeight = tempTotalWeight
 						bestTotalValue = tempTotalValue
-						bestHeuristic = currentItemHeuristic
+						bestHeuristic = tempHeuristic
 						pickedItem = x
 		
 		# Check conditions to break the while path
@@ -73,15 +77,20 @@ def localBeamSearch(flagForItemsPut, itemList):
 def main():
 	itemList = []
 	flagForItemPut = []
+	weightLimit = 20
+	listLength = 10
 
-	for x in range(6):
-		i = item(x + 8, x, x + 4)
+	for x in range(listLength):
+		tempValue = random.randint(0, 100)
+		tempType = random.randint(1, 3)
+		tempWeight = random.randint(1, 10)
+		i = item(tempValue, tempType, tempWeight)
 		itemList.append(i)
 		flagForItemPut.append(0)
 
-	for x in range(6):
+	for x in range(listLength):
 		print(itemList[x], "\n")
 
-	localBeamSearch(flagForItemPut, itemList)
+	localBeamSearch(flagForItemPut, itemList, weightLimit)
 
 main()
