@@ -59,6 +59,7 @@ def localBeamSearch(flagForItemsPut, itemList, weightLimit):
 			flipBit(tempFlagList[x])	# Flip a bit
 			currentHeuristic = calculateHeuristic(tempFlagList, itemList, weightLimit)
 			
+			# Update if current best heuristic is not set or current heuristic is better
 			if currentBestHeuristic == -1 or currentHeuristic < currentBestHeuristic:
 				currentBestHeuristic = currentHeuristic
 				indexForBestHeuristic = x
