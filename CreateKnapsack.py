@@ -7,11 +7,9 @@ import numpy as np  # For arrays
 
 # end
 
-
 # function
 def percent(part, whole):
     return (part * whole) / 100.0
-
 
 # end
 
@@ -26,10 +24,25 @@ Wi = rng.sample(value_range, (10 - i))  # Weights
 
 vi = np.empty(10 - i, dtype=object)
 for x in range(10 - i):
-    vi[x] = np.random.randint(Wi[x] - int(percent(Wi[x], 10)), Wi[x] + int(percent(Wi[x], 10))) # Values
+    vi[x] = np.random.randint(Wi[x] - int(percent(Wi[x], 10)) - 1, Wi[x] + int(percent(Wi[x], 10))) # Values
+# I need to add -1 to the Wi[x] - due to in rare circumstances it will result in low >= high
 
-ci = np.random.randint(1, m + 1, 10 - i)  # Correspond classes
+ci_temp = []
+for x in range(1, m + 1):
+    ci_temp += [x]
+unique_values = set(ci_temp)
 
+ci = []
+for x in unique_values:
+    ci.append(x)
+
+rng.shuffle(ci)
+
+while len(ci) < (10 - i):
+    random_value = rng.choice(ci_temp)
+    ci.append(random_value)
+
+rng.shuffle(ci) # Correspond classes
 
 file = open("Input.txt", "w")
 # Open file under 'w' write mode
