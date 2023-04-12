@@ -4,7 +4,7 @@ import copy
 # ---------- GLOBAL VARIABLES ---------
 weightLimit = 20
 itemList = []
-
+attemptLimit = 10
 # ---------- CLASSES ----------
 class item:
 	def __init__(self, weight, value, type):
@@ -29,15 +29,18 @@ def calculateHeuristic(flagList):
 	totalWeight = 0
 	totalValue = 0
 	heuristic = 0
-	bigNum = 0
+	bigNum = 2
 
 	# Total weight = Total weight + item's weight * flag for item
 	# Same for value
 	for x in range(len(flagList)):
-		bigNum += itemList[x].weight
 		totalWeight += itemList[x].weight * flagList[x]
 		totalValue += itemList[x].value * flagList[x]
 	
+	# Special condition: value is 0
+	if totalValue == 0:
+		return bigNum * 3
+
 	# When there is nothing in the bag
 	if totalWeight == 0:
 		for x in range(len(flagList)):
@@ -47,17 +50,22 @@ def calculateHeuristic(flagList):
 	if totalWeight > weightLimit:
 		heuristic += bigNum
 	
-	if totalValue != 0:
-		heuristic += totalWeight / totalValue
-	else:
-		heuristic += bigNum
+	# Heuristic formula
+	heuristic += 1  / totalValue 
 
 	return heuristic
 
 
 # ----------- LOCAL BEAM SEARCH -----------
-def localBeamSearch(flagList):
-	kBest = 1			# Choose k best successors to expand
+def localBeamSearch():
+	# Initialization
+	kBest = 3			# Choose k best successors to expand
+	attemptToFindBetterSuccessor = 0
+
+	flagList = []
+	for x in range(len(itemList)):
+		flagList.append(0)
+
 	bestSuccessor = copy.deepcopy(flagList)	# Initialize this with a list of 0s
 	listOfSuccessors = []
 	listOfStartSuccessors = []
@@ -68,21 +76,18 @@ def localBeamSearch(flagList):
 			flagList[x] = random.randint(0, 1)
 		listOfStartSuccessors.append(copy.deepcopy(flagList))
 
-	print(listOfStartSuccessors)
-
 	while 1:
+		attemptToFindBetterSuccessor += 1
 		for k in range(kBest):
 			# Next, expands the search list given the starting node and store them into another list
 			# To do that, we need to make a copy of the list from the starting node
 			tempFlagList = copy.deepcopy(listOfStartSuccessors[k])
 
 			# Then extend the branch from the starting node (By flipping bit 1 by 1)
-			for x in range(len(tempFlagList)):
+			for x in range(len(flagList)):
 				bit = tempFlagList[x]
 				tempFlagList[x] = flipBit(bit)
-
 				listOfSuccessors.append(copy.deepcopy(tempFlagList)) 	# Store the node into the list of successors
-
 				tempFlagList[x] = bit # Return the flipped bit back to its original state
 		
 		# After getting all the successors, sort the list with heuristic going from low to high
@@ -90,20 +95,22 @@ def localBeamSearch(flagList):
 		# Then compare the best in the list with the best successor of all time
 		if (calculateHeuristic(listOfSuccessors[0]) < calculateHeuristic(bestSuccessor)):
 			bestSuccessor = copy.deepcopy(listOfSuccessors[0])
+			attemptToFindBetterSuccessor = 0
 
 		# Clear the startSuccessors list and append top k
 		listOfStartSuccessors.clear()
 		for k in range(kBest):
 			listOfStartSuccessors.append(copy.deepcopy(listOfSuccessors[k]))
+		listOfSuccessors.clear()
 		
-		# Current goal: Find condition to break the while loop (Aka, finding the goal state)
-		break
+		print(listOfStartSuccessors)
 
-	# After the while loop, return the final result
-	# print(listOfStartSuccessors)
+		if attemptToFindBetterSuccessor >= attemptLimit:
+			break
+
+	return bestSuccessor
 
 def main():
-	flagList = []
 	listLength = 10
 
 	for x in range(listLength):
@@ -112,11 +119,11 @@ def main():
 		tempType = random.randint(1, 3)
 		i = item(tempWeight, tempValue, tempType)
 		itemList.append(i)
-		flagList.append(0)
 
-	#for x in range(listLength):
-	#	print(itemList[x], "\n")
+	for x in range(listLength):
+		print(itemList[x], "\n")
 
-	localBeamSearch(flagList)
+	result = localBeamSearch()
+	print(result)
 
 main()
