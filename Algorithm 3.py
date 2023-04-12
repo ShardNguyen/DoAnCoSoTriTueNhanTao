@@ -2,77 +2,74 @@ import random
 
 # Build class for items
 class item:
-	def __init__(self, value, type, weight):
+	def __init__(self, weight, value, type):
+		self.weight = weight
 		self.value = value
 		self.type = type
-		self.weight = weight
 
 	def __str__(self):
 		return f"Value: {self.value}, Type: {self.type}, Weight: {self.weight}"
 
-# ----- NOTE -----
-# Given the list with A items, create another list to flag if they're put into the bag or not
+def flipBit(bit):
+	if bit == 1:
+		bit = 0
+	elif bit != 0:
+		bit = 1
+	else: # Return error if bit is not 0 or 1
+		bit = -1
 
-# Start with the simplest situation (k = 1, with only weight limit)
-	# Heuristic function: h(x) = totalWeight / totalValue
-
-def localBeamSearch(flagForItemsPut, itemList, weightLimit):
-	# Initialize some variables
-	kBest = 1
+def calculateHeuristic(tempFlagList, itemList, weightLimit):
 	totalWeight = 0
 	totalValue = 0
+	heuristic = 0
 
-	# Pick a random item
-	randomItem = random.randint(0, len(itemList) - 1)
-	flagForItemsPut[randomItem] = 1
-	totalWeight += itemList[randomItem].weight
-	totalValue += itemList[randomItem].value
-	print(randomItem)
+	# Total weight = Total weight + item's weight * flag for item
+	# Same for value
+	for x in range(len(tempFlagList)):
+		totalWeight += itemList[x].weight * tempFlagList[x]
+		totalValue += itemList[x].value * tempFlagList[x]
+	
+	# When there is nothing in the bag
+	if totalWeight == 0:
+		heuristic = 10000
+	# Situations when the current state violate a restriction
+	if totalWeight > weightLimit:
+		heuristic = 10000
 
-	# Next, find all of its successor (means try to combine with every other items)
+	heuristic += totalWeight / totalValue
+	return heuristic
+
+
+def localBeamSearch(flagForItemsPut, itemList, weightLimit):
+	kBest = 1			# Choose k best successors to expand 
+
+	# Pick a random state to begin with (For example: 10010110)
+	for x in range(len(flagForItemsPut)):
+		flagForItemsPut[x] = random.randit(0, 1)
+
+	# Store temp flag list for comparision
+	tempFlagList = flagForItemsPut
+
+	# Next, find all of its successor (Flips one bit at a time) and finds the best heuristic
 	while 1:
-		bestHeuristic = -1
-		bestTotalWeight = totalWeight
-		bestTotalValue = totalValue
-		pickedItem = -1
+		currentBestHeuristic = -1	# Save the best heuristic
+		indexForBestHeuristic = -1	# Save the index of the item that leads to best heuristic
 
-		for x in range(len(itemList)):
-			# If item is not listed, check
-			if flagForItemsPut[x] == 0:
-				tempTotalWeight = totalWeight + itemList[x].weight
-				tempTotalValue = totalValue + itemList[x].value
-				tempHeuristic = tempTotalWeight / tempTotalValue
+		for x in range(len(flagForItemsPut)):
+			flipBit(tempFlagList[x])	# Flip a bit
+			currentHeuristic = calculateHeuristic(tempFlagList, itemList, weightLimit)
+			
+			if currentBestHeuristic == -1 or currentHeuristic < currentBestHeuristic:
+				currentBestHeuristic = currentHeuristic
+				indexForBestHeuristic = x
 
-				# Check if weight exceeded the weightLimit
-				if tempTotalWeight > weightLimit:
-					continue
+			flipBit(tempFlagList[x])	# Return back to temp's initial state
 
-				# Then we compare with the best heuristic values
-				# Check if tempHeuristic is used
-				if bestHeuristic == -1:
-					bestHeuristic = tempHeuristic
-					bestTotalWeight = tempTotalWeight
-					bestTotalValue = tempTotalValue
-					pickedItem = x
-				else:
-					if tempHeuristic < bestHeuristic:
-						bestTotalWeight = tempTotalWeight
-						bestTotalValue = tempTotalValue
-						bestHeuristic = tempHeuristic
-						pickedItem = x
-		
-		# Check conditions to break the while path
-		# When no Item is picked
-		if (pickedItem == -1):
-			break
-		
-		# Else update flag list, totalWeight, totalValue
-		flagForItemsPut[pickedItem] = 1
-		totalWeight = bestTotalWeight
-		totalValue = bestTotalValue
+		flipBit(tempFlagList[indexForBestHeuristic])	# Flip the bit that returns the best heuristic
 
+	# After the while loop, return the final result
+	flagForItemsPut = tempFlagList
 	print(flagForItemsPut)
-	print(totalWeight, totalValue)
 
 def main():
 	itemList = []
@@ -81,10 +78,10 @@ def main():
 	listLength = 10
 
 	for x in range(listLength):
+		tempWeight = random.randint(1, 10)
 		tempValue = random.randint(0, 100)
 		tempType = random.randint(1, 3)
-		tempWeight = random.randint(1, 10)
-		i = item(tempValue, tempType, tempWeight)
+		i = item(tempWeight, tempValue, tempType)
 		itemList.append(i)
 		flagForItemPut.append(0)
 
