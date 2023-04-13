@@ -46,15 +46,11 @@ def calculateHeuristic(flagList):
 			totalValue += itemList[x].value
 
 	# This is for restrictions
-	# Special condition: value is 0
-	if totalValue == 0:
+	# Special condition: Value = 0 or Weight = 0
+	if totalValue == 0 or totalWeight == 0:
 		return bigNum * 3
 
-	# When there is nothing in the bag
-	if totalWeight == 0:
-		heuristic += bigNum
-
-	# Situations when the current state violate a restriction
+	# Check if the bag is violating the weightLimit
 	if totalWeight > weightLimit:
 		heuristic += bigNum
 
@@ -62,7 +58,7 @@ def calculateHeuristic(flagList):
 	heuristic += len(tempRemainingTypeList)
 
 	# Heuristic formula
-	heuristic += 1  / totalValue 
+	heuristic += 1  / totalValue
 
 	tempRemainingTypeList.clear()
 	return heuristic
@@ -145,6 +141,13 @@ def main():
 		print(itemList[x], "\n")
 
 	result = localBeamSearch()
-	print(result)
+	
+	# Ccheck if the result violates any restrictions
+	# If the heuristic is <= 1, it means the solution is correct
+	if calculateHeuristic(result) <= 1:
+		print(result)
+	else:
+		print("No solution found")
+
 
 main()
