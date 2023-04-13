@@ -3,6 +3,8 @@ import copy
 
 # ---------- GLOBAL VARIABLES ---------
 weightLimit = 20
+typeAmount = 8
+typeList = []
 itemList = []
 attemptLimit = 10
 # ---------- CLASSES ----------
@@ -29,30 +31,40 @@ def calculateHeuristic(flagList):
 	totalWeight = 0
 	totalValue = 0
 	heuristic = 0
-	bigNum = 2
+	bigNum = 2 + len(flagList)
+	tempRemainingTypeList = copy.deepcopy(typeList)
 
-	# Total weight = Total weight + item's weight * flag for item
-	# Same for value
+	# Check how many types are left unchosen
+	# Calculate totalWeight and totalValue
 	for x in range(len(flagList)):
-		totalWeight += itemList[x].weight * flagList[x]
-		totalValue += itemList[x].value * flagList[x]
-	
+		# Check if item is chosen
+		if (flagList[x] == 1):
+			# Check if the type is chosen in the list (count = 0 means chosen)
+			if (tempRemainingTypeList.count(itemList[x].type)):
+				tempRemainingTypeList.remove(itemList[x].type)
+			totalWeight += itemList[x].weight
+			totalValue += itemList[x].value
+
+	# This is for restrictions
 	# Special condition: value is 0
 	if totalValue == 0:
 		return bigNum * 3
 
 	# When there is nothing in the bag
 	if totalWeight == 0:
-		for x in range(len(flagList)):
-			heuristic += bigNum
+		heuristic += bigNum
 
 	# Situations when the current state violate a restriction
 	if totalWeight > weightLimit:
 		heuristic += bigNum
-	
+
+	# Check how many type is left unchosen
+	heuristic += len(tempRemainingTypeList)
+
 	# Heuristic formula
 	heuristic += 1  / totalValue 
 
+	tempRemainingTypeList.clear()
 	return heuristic
 
 
@@ -101,9 +113,9 @@ def localBeamSearch():
 		listOfStartSuccessors.clear()
 		for k in range(kBest):
 			listOfStartSuccessors.append(copy.deepcopy(listOfSuccessors[k]))
+
+		#Finally clear the list of Successors
 		listOfSuccessors.clear()
-		
-		print(listOfStartSuccessors)
 
 		if attemptToFindBetterSuccessor >= attemptLimit:
 			break
@@ -113,12 +125,21 @@ def localBeamSearch():
 def main():
 	listLength = 10
 
+	# Create an empty type list
+	for x in range(typeAmount):
+		typeList.append(0)
+
 	for x in range(listLength):
 		tempWeight = random.randint(1, 10)
 		tempValue = random.randint(0, 100)
-		tempType = random.randint(1, 3)
+		tempType = random.randint(1, typeAmount)
 		i = item(tempWeight, tempValue, tempType)
+
 		itemList.append(i)
+		typeList[tempType - 1] = tempType	# Track which types of item is inside the item list
+
+	while (typeList.count(0)):	# Clear out any types that doesn't have an item inside the itemList
+		typeList.remove(0)
 
 	for x in range(listLength):
 		print(itemList[x], "\n")
