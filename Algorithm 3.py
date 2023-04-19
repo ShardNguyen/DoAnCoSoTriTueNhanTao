@@ -1,12 +1,6 @@
 import random
 import copy
 
-# ---------- GLOBAL VARIABLES ---------
-weightLimit = 20
-typeAmount = 8
-typeList = []
-itemList = []
-attemptLimit = 10
 # ---------- CLASSES ----------
 class item:
 	def __init__(self, weight, value, type):
@@ -27,7 +21,7 @@ def flipBit(bit):
 		return -1
 
 # Need adjustment
-def calculateHeuristic(flagList):
+def calculateHeuristic(flagList, weightLimit, itemList, typeList):
 	totalWeight = 0
 	totalValue = 0
 	heuristic = 0
@@ -65,7 +59,7 @@ def calculateHeuristic(flagList):
 
 
 # ----------- LOCAL BEAM SEARCH -----------
-def localBeamSearch():
+def localBeamSearch(itemList, weightLimit, typeList, attemptLimit):
 	# Initialization
 	kBest = 3			# Choose k best successors to expand
 	attemptToFindBetterSuccessor = 0
@@ -97,11 +91,14 @@ def localBeamSearch():
 				tempFlagList[x] = flipBit(bit)
 				listOfSuccessors.append(copy.deepcopy(tempFlagList)) 	# Store the node into the list of successors
 				tempFlagList[x] = bit # Return the flipped bit back to its original state
-		
+	
+		def getHeuristic(Successors):
+			return calculateHeuristic(Successors, weightLimit, itemList, typeList)
+
 		# After getting all the successors, sort the list with heuristic going from low to high
-		listOfSuccessors.sort(key=calculateHeuristic)
+		listOfSuccessors.sort(key=getHeuristic)
 		# Then compare the best in the list with the best successor of all time
-		if (calculateHeuristic(listOfSuccessors[0]) < calculateHeuristic(bestSuccessor)):
+		if (getHeuristic(listOfSuccessors[0]) < getHeuristic(bestSuccessor)):
 			bestSuccessor = copy.deepcopy(listOfSuccessors[0])
 			attemptToFindBetterSuccessor = 0
 
@@ -119,7 +116,12 @@ def localBeamSearch():
 	return bestSuccessor
 
 def main():
-	listLength = 10
+	weightLimit = 1500
+	attemptLimit = 10
+	listLength = 200
+	typeAmount = 10
+	typeList = []
+	itemList = []
 
 	# Create an empty type list
 	for x in range(typeAmount):
@@ -140,11 +142,11 @@ def main():
 	for x in range(listLength):
 		print(itemList[x], "\n")
 
-	result = localBeamSearch()
+	result = localBeamSearch(itemList, weightLimit, typeList, attemptLimit)
 	
 	# Ccheck if the result violates any restrictions
 	# If the heuristic is <= 1, it means the solution is correct
-	if calculateHeuristic(result) <= 1:
+	if calculateHeuristic(result, weightLimit, itemList, typeList) <= 1:
 		print(result)
 	else:
 		print("No solution found")
