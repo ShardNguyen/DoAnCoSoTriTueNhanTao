@@ -1,13 +1,13 @@
 import random as rng
 
 # Define the value not present in the input file
+# Dieu chinh pop dua vao 
 mutation_rate = 0.05 # Based on Mr Nguyen Tien Huy lectures on genetic algorithms
 population_size = 100 # Population size at the beginning 
-num_generations = 3 * population_size# Number of offsprings should be at least 3 times the original population
-
+num_generations = 20 * population_size# Number of offsprings should be at least 3 times the original population
 # Read the input parameters from the Input.txt file
 
-file = open("Input.txt", "r")
+file = open("INPUT_1.txt", "r")
 
 max_weight = int(file.readline())
 total_class = int(file.readline())
@@ -18,71 +18,114 @@ class_values = file.read().split("\n")
 
 file.close()
 
+big_num = sum([values[i] for i in range(len(values))]) # For fitness calculation
 
 # Define the fitness function
 def fitness(chromosome):
-    total_value = sum([values[i] for i in range(len(chromosome)) if chromosome[i] == 1])
-    total_weight = sum([weights[i] for i in range(len(chromosome)) if chromosome[i] == 1])
-    if total_weight > max_weight:
-        return 0
-    else:
-        return total_value
+    total_fitness = 0
+    total_weight = 0
+    availibe_class = 0
+    for i in range(len(chromosome)):
+        if chromosome[i] == 1:
+            total_fitness += values[i]
+            total_weight += weights[i]
+            availibe_class |= 1 <<(classes[i] - 1) # Shift bit
+    if total_weight <= max_weight:
+        total_fitness += 2 * big_num 
+    if availibe_class == (2**total_class - 1): # 111 = 7
+        total_fitness += big_num
+    #if total_weight > max_weight: Because we already have the big_num value so return is not needed
+        #return 0  # penalize solutions that exceed the maximum weight limit
+    return total_fitness
+
+def cal_value(chromosome):
+    total_value = 0
+    for i in range(len(chromosome)):
+        if chromosome[i] == 1:
+            total_value += values[i]
+    return total_value
 
 # Define the initialization function
-def initialize_population():
+
+""" def initialize_population():
     population = []
-    for i in range(population_size):
-        chromosome = [rng.randint(0, 1) for j in range(len(values))]
+    for _ in range(population_size):
+        chromosome = [rng.randint(0, 1) for _ in range(len(values))]
+        population.append(chromosome)
+    return population """
+
+#by MQ with love 
+def initialize_population(): # Init gioi han so vat trong list, do test case thuong chi can 1 toi 3 vat la du weight
+    population = []
+    population.append([0] * len(values)) # set bang 0 het de gioi han
+    for _ in range(population_size - 1):
+        chromosome  = []
+        totalWeight = 0
+        for j in range(len(values)):
+            randNum = rng.choices([0, 1], weights=[totalWeight, max_weight], k = 1)[0]
+            chromosome.append(randNum)
+            if(randNum == 1):
+                totalWeight += weights[j]
         population.append(chromosome)
     return population
 
+# Replace the old selection algo with tournament selection
 # Define the selection function
-def select_parents(population):
-    fitness_values = [fitness(chromosome) for chromosome in population]
-    total_fitness = sum(fitness_values)
-    probabilities = [fitness_value / total_fitness for fitness_value in fitness_values]
-    parent1_index = rng.choices(range(population_size), weights=probabilities)[0]
-    parent2_index = rng.choices(range(population_size), weights=probabilities)[0]
-    return population[parent1_index], population[parent2_index]
+def tournament_selection(population, k=5):
+    selected = []
+    for i in range(len(population)):
+        contestants = rng.sample(population, k)
+        winner = max(contestants, key=lambda x: fitness(x))
+        selected.append(winner)
+    return selected
 
 # Define the crossover function
-def crossover(parent1, parent2):
-    crossover_point = rng.randint(1, len(values) - 1)
-    child1 = parent1[:crossover_point] + parent2[crossover_point:]
-    child2 = parent2[:crossover_point] + parent1[crossover_point:]
-    return child1, child2
+def binary_crossover(parent1, parent2):
+    crossover_point = rng.randint(0, len(parent1) - 1)
+    offspring1 = parent1[:crossover_point] + parent2[crossover_point:]
+    offspring2 = parent2[:crossover_point] + parent1[crossover_point:]
+    return offspring1, offspring2
 
 # Define the mutation function
-def mutate(chromosome):
-    mutated_chromosome = chromosome[:]
+def binary_mutation(chromosome, rate):
     for i in range(len(chromosome)):
-        if rng.random() < mutation_rate:
-            mutated_chromosome[i] = 1 - mutated_chromosome[i]
-    return mutated_chromosome
+        if rng.random() < rate:
+            chromosome[i] = 1 - chromosome[i]  # flip bit
+    return chromosome
 
-# Run the genetic algorithm
+# Define the elitist replacement function
+def elitist_replacement(population, offspring_population):
+    all_population = population + offspring_population
+    sorted_population = sorted(all_population, key=lambda x: fitness(x), reverse=True)
+    return sorted_population[:population_size]
+
+# Initialize the population
 population = initialize_population()
-for generation in range(num_generations):
-    parent1, parent2 = select_parents(population)
-    child1, child2 = crossover(parent1, parent2)
-    child1 = mutate(child1)
-    child2 = mutate(child2)
-    population.append(child1)
-    population.append(child2)
-    population = sorted(population, key=lambda chromosome: -fitness(chromosome))[:population_size]
 
-# Print the best solution
-best_solution = max(population, key=fitness)
-best_value = fitness(best_solution)
+# Evolution loop
+for i in range(num_generations):
+    # Selection
+    parents = tournament_selection(population)
 
-file = open("Output.txt", "w")
+    # Crossover
+    offspring_population = []
+    for j in range(0, population_size, 2):
+        offspring1, offspring2 = binary_crossover(parents[j], parents[j+1])
+        offspring_population.append(offspring1)
+        offspring_population.append(offspring2)
 
-""" 
-print("Best solution:", best_solution)
-print("Best value:", best_value)
-"""
+    # Mutation
+    for j in range(len(offspring_population)):
+        offspring_population[j] = binary_mutation(offspring_population[j], mutation_rate)
 
-file.write(repr(best_value) + "\n")
-file.write(repr(best_solution) + "\n")
+    # Evaluate fitness
+    for j in range(len(offspring_population)):
+        fitness(offspring_population[j])
 
-file.close()
+    # Replacement
+    population = elitist_replacement(population, offspring_population)
+
+# Print the best solution found
+best_solution = max(population, key=lambda x: fitness(x))
+print(f"Best solution: {best_solution}")
+print(f"Best value: {cal_value(best_solution)}")
