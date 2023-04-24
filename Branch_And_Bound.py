@@ -39,7 +39,7 @@ def getBound(Node, n, W, Item_list, m):
         return 0
     
     check_class = Node.class_select
-
+    # Move to the next node
     next_level = Node.level + 1
 
     # Using bits shift left and bitwise OR (|) to update the string containing which class has been included
