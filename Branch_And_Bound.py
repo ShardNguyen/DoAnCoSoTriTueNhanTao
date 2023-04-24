@@ -2,6 +2,7 @@ from collections import deque
 from typing import List, Tuple
 import os
 
+# READ DATA FROM FILES
 def loadInputFile(input_file: str) -> Tuple[int, int, List[float], List[int], List[int]]:
     with open(input_file, 'r') as fin:
         W = float(fin.readline().strip())
@@ -11,7 +12,7 @@ def loadInputFile(input_file: str) -> Tuple[int, int, List[float], List[int], Li
         c = list(map(int, fin.readline().strip().split(', '))) 
     return W, m, w, v, c
 
-# DEFINING AN ITEM
+# DEFINE AN ITEM
 class Item:
     def __init__(self, weight: int, value: int, class_label: int, first_index: int):
         self.weight = weight
@@ -20,7 +21,7 @@ class Item:
         self.class_label = class_label
         self.first_index = first_index # Store the bit to represent if the item is put in the bag or not (0: not taken, 1: taken)
 
-# DEFINING AN ITEM AS A NODE IN A BINARY TREE
+# DEFINE AN ITEM AS A NODE IN A BINARY TREE
 class KnapsackNode:
     def __init__(self, weight: int, profit: int, level: int, bound: int, class_select: int, choose: str):
         self.weight = weight
@@ -28,10 +29,12 @@ class KnapsackNode:
         self.level = level
         self.bound = bound
         self.class_select = class_select # Count how many class has been selected 
-        self.choose = choose # Store the string represent the number of class has been taken (Ex: 1 0 0 means that in the bag there are only items with class 1 and no items with class 2 and 3)
+        self.choose = choose # Store the string represent the number of class has been taken (Ex: 0 1 0 means that in the bag there are only items of class 2 but no items of class 1 and 3)
 
 # GET THE BOUND FOR EACH NODE
 def getBound(Node, n, W, Item_list, m):
+
+    # If the weight while solving in a case is larger than W then eliminate this case
     if Node.weight >= W:
         return 0
     
@@ -39,21 +42,23 @@ def getBound(Node, n, W, Item_list, m):
 
     next_level = Node.level + 1
     while (next_level < n):
-        check_class |= (1 << (Item_list[next_level].class_label - 1))
-        next_level += 1
+        check_class |= (1 << (Item_list[next_level].class_label - 1)) # Using bits shift left to update the string containing which class has been included
+        next_level += 1 # Move to the next node
     
+    # If the total class of all items in the case that is being checked is not enough, eliminate that case as well
     if (2**m - 1 != check_class):
         return 0
 
     profit_bound = Node.profit
 
-    j = Node.level + 1 # Check all the nodes in the future
+    j = Node.level + 1 # Move to the next node
     totalWeight = Node.weight
 
-    while ((j < n) and (totalWeight + Item_list[j].weight <= W)):
-        totalWeight += Item_list[j].weight
-        profit_bound += Item_list[j].value
-        j += 1
+    # Continue checking when the level of a node has not reached the end (meaning there are items can be put in the bag) and the total weight has not exceeded W
+    while (j < n) and (totalWeight + Item_list[j].weight <= W):
+        totalWeight += Item_list[j].weight # Update the total weight
+        profit_bound += Item_list[j].value # Update the max profit
+        j += 1 # Move to the next node
     
     if j < n:
         profit_bound += (W - totalWeight) * Item_list[j].value / Item_list[j].weight
@@ -101,6 +106,7 @@ def Knapsack(W, weights, values, class_label, num_of_class):
         withItem.bound = getBound(withItem, n, W, Item_list, m)
         withItem.choose = u.choose + '1'
 
+        # If the item is chosen, update the profit and the string 
         if (withItem.weight <= W and withItem.profit > maxProfit and (2**num_of_class - 1 == withItem.class_select)):
             maxProfit = withItem.profit
             best_string = withItem.choose
