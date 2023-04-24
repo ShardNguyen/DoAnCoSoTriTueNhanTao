@@ -41,8 +41,10 @@ def getBound(Node, n, W, Item_list, m):
     check_class = Node.class_select
 
     next_level = Node.level + 1
+
+    # Using bits shift left and bitwise OR (|) to update the string containing which class has been included
     while (next_level < n):
-        check_class |= (1 << (Item_list[next_level].class_label - 1)) # Using bits shift left to update the string containing which class has been included
+        check_class |= (1 << (Item_list[next_level].class_label - 1)) 
         next_level += 1 # Move to the next node
     
     # If the total class of all items in the case that is being checked is not enough, eliminate that case as well
