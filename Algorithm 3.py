@@ -46,7 +46,7 @@ def calculateHeuristic(flagList, weightLimit, itemList, typeList):
 
 	# Check if the bag is violating the weightLimit
 	if totalWeight > weightLimit:
-		heuristic += bigNum
+		heuristic += bigNum + totalWeight - weightLimit
 
 	# Check how many type is left unchosen
 	heuristic += len(tempRemainingTypeList)
@@ -118,7 +118,7 @@ def localBeamSearch(itemList, weightLimit, typeList, attemptLimit):
 def main():
 	weightLimit = 1500
 	attemptLimit = 10
-	listLength = 200
+	listLength = 1000
 	typeAmount = 10
 	typeList = []
 	itemList = []
