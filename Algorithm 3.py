@@ -46,7 +46,7 @@ def calculateHeuristic(flagList, weightLimit, itemList, typeList):
 
 	# Check if the bag is violating the weightLimit
 	if totalWeight > weightLimit:
-		heuristic += bigNum + (totalWeight - weightLimit)
+		heuristic += bigNum + totalWeight - weightLimit
 
 	# Check how many type is left unchosen
 	heuristic += len(tempRemainingTypeList)
