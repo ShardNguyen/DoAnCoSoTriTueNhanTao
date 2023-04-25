@@ -72,8 +72,9 @@ def localBeamSearch(itemList, weightLimit, typeList, attemptLimit):
 	listOfSuccessors = []
 	listOfStartSuccessors = []
 
-	# Pick k random states to begin with (Ex: k = 1) and put them into listOfStartSuccesors
-	for k in range(kBest):
+	# Pick k random states to begin with 
+	listOfStartSuccessors.append(copy.deepcopy(flagList)) # Except for the first one which will initialized with a list of 0s
+	for k in range(1, kBest):
 		for x in range(len(flagList)):
 			flagList[x] = random.randint(0, 1)
 		listOfStartSuccessors.append(copy.deepcopy(flagList))
