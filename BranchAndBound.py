@@ -71,7 +71,8 @@ def BranchAndBoundKnapsack(W, weights, values, class_label, num_of_class):
     Item_list.sort(key = lambda x:x.ratio, reverse=True)
 
     # Using a stack to store qualified items 
-    stack = [KnapsackNode(0, 0, -1, -1, 0, '')]
+    stack = deque()
+    stack.append(KnapsackNode(0, 0, -1, -1, 0, ''))
     n = len(values)  # Get the number of items
     maxProfit = 0    # The maximum value we can get from a list of items
     best_string = '' # Store the string contains only number 0 or 1, representing each item in the list is chosen or not 
