@@ -95,7 +95,7 @@ def Knapsack(W, weights, values, class_label, num_of_class):
 
         nextLevel = u.level + 1  # Get the level of the next node
         
-        # Eliminate the item that is not satisfied
+        # Case 1: the item  is not satisfied
         withoutItem = KnapsackNode(u.weight, u.profit, nextLevel, 0, u.class_select, '')
         withoutItem.bound = getBound(withoutItem, n, W, Item_list, num_of_class)
         withoutItem.choose = u.choose + '0'
@@ -103,7 +103,7 @@ def Knapsack(W, weights, values, class_label, num_of_class):
         if withoutItem.bound > maxProfit:
             stack.append(withoutItem)
             
-        # Choose the item that is satisfied
+        # Case 2: the item is satisfied
         withItem = KnapsackNode(u.weight + Item_list[nextLevel].weight, u.profit + Item_list[nextLevel].value, nextLevel, 0, u.class_select | (1 << (Item_list[nextLevel].class_label - 1)), '')
         withItem.bound = getBound(withItem, n, W, Item_list, m)
         withItem.choose = u.choose + '1'
